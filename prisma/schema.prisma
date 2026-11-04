@@ -1,0 +1,74 @@
+// Prisma Schema for HUSH ARCHIVE
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum DiscoveryStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model Category {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  slug        String      @unique
+  description String      @db.Text
+  imageUrl    String?
+  discoveries Discovery[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([slug])
+}
+
+model Discovery {
+  id               String          @id @default(cuid())
+  archiveNumber    String          @unique // e.g. FILE 0001
+  title            String
+  slug             String          @unique
+  shortDescription String          @db.Text
+  fullDescription  String          @db.Text
+  whyInteresting   String          @db.Text
+  whatToExplore    String          @db.Text
+  websiteUrl       String
+  imageUrl         String
+  categoryId       String
+  category         Category        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  tags             String[]        @default([])
+  isFeatured       Boolean         @default(false)
+  status           DiscoveryStatus @default(DRAFT)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  publishedAt      DateTime?
+
+  @@index([archiveNumber])
+  @@index([slug])
+  @@index([categoryId])
+  @@index([status])
+  @@index([isFeatured])
+  @@index([createdAt])
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  @@index([email])
+}
+
+model NewsletterSubscriber {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  status       String   @default("ACTIVE")
+  subscribedAt DateTime @default(now())
+
+  @@index([email])
+}
