@@ -68,7 +68,6 @@ export default function AdminLoginPage() {
                   type="email"
                   autoComplete="email"
                   required
-                  defaultValue="admin@husharchive.com"
                   placeholder="admin@husharchive.com"
                   className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm font-mono rounded bg-cold-paper border border-dusty-violet/30 text-deep-archive focus:outline-none focus:border-deep-archive focus:ring-1 focus:ring-deep-archive"
                 />
@@ -95,12 +94,6 @@ export default function AdminLoginPage() {
                 />
                 <Lock className="w-4 h-4 text-dusty-violet absolute left-3 top-2.5 pointer-events-none" />
               </div>
-            </div>
-
-            <div className="p-3 rounded bg-archive-paper/30 border border-dusty-violet/20 text-[11px] font-mono text-archive-indigo space-y-1">
-              <p className="font-semibold text-deep-archive">Initial Credentials:</p>
-              <p>Email: <span className="select-all">admin@husharchive.com</span></p>
-              <p>Password: <span className="select-all">husharchive2026!</span></p>
             </div>
 
             <button

@@ -4,8 +4,18 @@ import bcrypt from "bcryptjs";
 import prisma from "./prisma";
 
 const COOKIE_NAME = "hush_admin_session";
-const JWT_SECRET = process.env.JWT_SECRET || "fallback_hush_archive_secret_key_2026_modern";
-const secretKey = new TextEncoder().encode(JWT_SECRET);
+
+// JWT_SECRET is required. Fail loudly at module load time if it is missing
+// so misconfigured deployments are caught immediately rather than silently
+// using a guessable fallback.
+const _jwtSecret = process.env.JWT_SECRET;
+if (!_jwtSecret) {
+  throw new Error(
+    "JWT_SECRET environment variable is required but has not been configured. " +
+      "Set it to a long random string in your .env file before starting the server."
+  );
+}
+const secretKey = new TextEncoder().encode(_jwtSecret);
 
 export interface SessionPayload {
   id: string;
@@ -94,4 +104,37 @@ export async function authenticateAdmin(email: string, passwordPlain: string) {
   }
 
   return { id: user.id, email: user.email };
+}
+
+/**
+ * Changes the password for an authenticated admin user.
+ * Verifies the current password before applying the change.
+ * Never logs passwords.
+ */
+export async function changeAdminPassword(
+  adminId: string,
+  currentPasswordPlain: string,
+  newPasswordPlain: string
+): Promise<{ success: boolean; error?: string }> {
+  if (newPasswordPlain.length < 10) {
+    return { success: false, error: "New password must be at least 10 characters long." };
+  }
+
+  const user = await prisma.adminUser.findUnique({ where: { id: adminId } });
+  if (!user) {
+    return { success: false, error: "Admin account not found." };
+  }
+
+  const isCurrentValid = await bcrypt.compare(currentPasswordPlain, user.passwordHash);
+  if (!isCurrentValid) {
+    return { success: false, error: "Current password is incorrect." };
+  }
+
+  const newHash = await bcrypt.hash(newPasswordPlain, 12);
+  await prisma.adminUser.update({
+    where: { id: adminId },
+    data: { passwordHash: newHash },
+  });
+
+  return { success: true };
 }

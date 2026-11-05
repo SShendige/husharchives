@@ -11,6 +11,7 @@ import {
   ExternalLink,
   LogOut,
   Shield,
+  Settings,
 } from "lucide-react";
 
 export const metadata = {
@@ -118,6 +119,14 @@ export default async function AdminLayout({
               >
                 <Mail className="w-3.5 h-3.5 text-discovery-orange" />
                 <span>Subscribers</span>
+              </Link>
+
+              <Link
+                href="/admin/settings"
+                className="px-3 py-1.5 rounded hover:bg-cold-paper/10 text-cold-paper transition flex items-center gap-1.5 shrink-0"
+              >
+                <Settings className="w-3.5 h-3.5 text-discovery-orange" />
+                <span>Settings</span>
               </Link>
             </nav>
           </div>

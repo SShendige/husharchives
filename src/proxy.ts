@@ -2,15 +2,24 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-const JWT_SECRET = process.env.JWT_SECRET || "fallback_hush_archive_secret_key_2026_modern";
-const secretKey = new TextEncoder().encode(JWT_SECRET);
+// In the proxy file (Edge runtime) we cannot throw at module level because
+// that would crash every request. Instead we read the secret at request time
+// and redirect unauthenticated if it is missing, so the server remains
+// reachable but all admin routes are safely denied.
+function getSecretKey(): Uint8Array | null {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) return null;
+  return new TextEncoder().encode(secret);
+}
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const sessionCookie = request.cookies.get("hush_admin_session")?.value;
 
+  const secretKey = getSecretKey();
+
   let isAuthenticated = false;
-  if (sessionCookie) {
+  if (sessionCookie && secretKey) {
     try {
       const { payload } = await jwtVerify(sessionCookie, secretKey);
       if (payload && payload.role === "admin") {
@@ -53,3 +62,4 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: ["/admin/:path*", "/api/admin/:path*"],
 };
+
